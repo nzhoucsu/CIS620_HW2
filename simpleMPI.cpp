@@ -23,6 +23,7 @@
 
 // MPI include
 #include <mpi.h>
+#include <unistd.h>
 
 // System includes
 #include <iostream>
@@ -49,6 +50,9 @@ int main(int argc, char *argv[])
     int blockSize = 256;
     int gridSize = 10000;
     int dataSizePerNode = gridSize * blockSize;
+
+    // hostname
+    char hostname[256];
 
     // Initialize MPI state
     MPI_CHECK(MPI_Init(&argc, &argv));
@@ -107,14 +111,16 @@ int main(int argc, char *argv[])
 
     // Reduction to the root node, computing the sum of output elements
     float sumNode = sum(dataNode_A, dataNode_B, dataSizePerNode);
-    float sumRoot;
+    gethostname(hostname, 256);
+    cout << "From " << hostname << ", output is " << sumNode << endl;
 
+    float sumRoot;
     MPI_CHECK(MPI_Reduce(&sumNode, &sumRoot, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD));
 
     if (commRank == 0)
     {
         float average = sumRoot;
-        cout << "Maximum of square roots is: " << average << endl;
+        cout << "Maximum Euclidean distance is: " << average << endl;
     }
 
     // Cleanup

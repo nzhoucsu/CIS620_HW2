@@ -53,6 +53,8 @@ int main(int argc, char *argv[])
 
     // hostname
     char hostname[256];
+    // mpi processor
+    int myrank, nprocs;
 
     // Initialize MPI state
     MPI_CHECK(MPI_Init(&argc, &argv));
@@ -111,7 +113,9 @@ int main(int argc, char *argv[])
     // Reduction to the root node, computing the sum of output elements
     float maxNode = max_here(dataNode_A, dataSizePerNode);
     gethostname(hostname, 256);
-    cout << "From " << hostname << ", output is " << maxNode << endl;
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);    
+    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+    cout << "Processor " << myrank << " of " << nprocs << "\t" << hostname << "\t\toutput is " << maxNode << endl;
 
     float maxRoot;
     MPI_CHECK(MPI_Reduce(&maxNode, &maxRoot, 1, MPI_FLOAT, MPI_MAX, 0, MPI_COMM_WORLD));

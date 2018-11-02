@@ -36,10 +36,10 @@ using std::endl;
 
 // Device code
 // Very simple GPU Kernel that computes square roots of input numbers
-__global__ void simpleMPIKernel(float *input, float *output)
+__global__ void simpleMPIKernel(float *input_a, float *input_b, float *output)
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    output[tid] = sqrt(input[tid]);
+    output[tid] = sqrt(input_a[tid]*input_a[tid] + input_b[tid]*input_b[tid]);
 }
 
 
@@ -54,41 +54,43 @@ void initData(float *data, int dataSize)
 
 // CUDA computation on each node
 // No MPI here, only CUDA
-void computeGPU(float *hostData, int blockSize, int gridSize)
+void computeGPU(float *hostData_a, float *hostData_b, int blockSize, int gridSize)
 {
     int dataSize = blockSize * gridSize;
 
     // Allocate data on GPU memory
-    float *deviceInputData = NULL;
-    CUDA_CHECK(cudaMalloc((void **)&deviceInputData, dataSize * sizeof(float)));
+    float *deviceInputData_a = NULL;
+    CUDA_CHECK(cudaMalloc((void **)&deviceInputData_a, dataSize * sizeof(float)));
+    float *deviceInputData_b = NULL;
+    CUDA_CHECK(cudaMalloc((void **)&deviceInputData_b, dataSize * sizeof(float)));
 
     float *deviceOutputData = NULL;
     CUDA_CHECK(cudaMalloc((void **)&deviceOutputData, dataSize * sizeof(float)));
 
     // Copy to GPU memory
-    CUDA_CHECK(cudaMemcpy(deviceInputData, hostData, dataSize * sizeof(float), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(deviceInputData_a, hostData_a, dataSize * sizeof(float), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(deviceInputData_b, hostData_b, dataSize * sizeof(float), cudaMemcpyHostToDevice));
 
     // Run kernel
-    simpleMPIKernel<<<gridSize, blockSize>>>(deviceInputData, deviceOutputData);
+    simpleMPIKernel<<<gridSize, blockSize>>>(deviceInputData_a, deviceInputData_b, deviceOutputData);
 
     // Copy data back to CPU memory
-    CUDA_CHECK(cudaMemcpy(hostData, deviceOutputData, dataSize *sizeof(float), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(hostData_a, deviceOutputData, dataSize *sizeof(float), cudaMemcpyDeviceToHost));
 
     // Free GPU memory
-    CUDA_CHECK(cudaFree(deviceInputData));
+    CUDA_CHECK(cudaFree(deviceInputData_a));
+    CUDA_CHECK(cudaFree(deviceInputData_b));
     CUDA_CHECK(cudaFree(deviceOutputData));
 }
 
-float sum(float *data_a, float *data_b, int size)
+float sum(float *data, int size)
 {
-    float max_val = -100.f;
-    float tmp;
+    float max_val = data[0];
 
-    for (int i = 0; i < size; i++)
+    for (int i = 1; i < size; i++)
     {
-        tmp = data_a[i]*data_a[i] + data_b[i]*data_b[i];
-        if(tmp > max_val){
-            max_val = tmp;
+        if(data[i] > max_val){
+            max_val = data[i];
         }
     }
 

@@ -106,16 +106,15 @@ int main(int argc, char *argv[])
     }
 
     // On each node, run computation on GPU
-    computeGPU(dataNode_A, blockSize, gridSize);
-    computeGPU(dataNode_B, blockSize, gridSize);
+    computeGPU(dataNode_A, dataNode_B, blockSize, gridSize);
 
     // Reduction to the root node, computing the sum of output elements
-    float sumNode = sum(dataNode_A, dataNode_B, dataSizePerNode);
+    float sumNode = sum(dataNode_A, dataSizePerNode);
     gethostname(hostname, 256);
     cout << "From " << hostname << ", output is " << sumNode << endl;
 
     float sumRoot;
-    MPI_CHECK(MPI_Reduce(&sumNode, &sumRoot, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD));
+    MPI_CHECK(MPI_Reduce(&sumNode, &sumRoot, 1, MPI_FLOAT, MPI_MAX, 0, MPI_COMM_WORLD));
 
     if (commRank == 0)
     {

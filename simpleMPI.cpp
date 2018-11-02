@@ -109,17 +109,17 @@ int main(int argc, char *argv[])
     computeGPU(dataNode_A, dataNode_B, blockSize, gridSize);
 
     // Reduction to the root node, computing the sum of output elements
-    float sumNode = sum(dataNode_A, dataSizePerNode);
+    float maxNode = max_here(dataNode_A, dataSizePerNode);
     gethostname(hostname, 256);
-    cout << "From " << hostname << ", output is " << sumNode << endl;
+    cout << "From " << hostname << ", output is " << maxNode << endl;
 
-    float sumRoot;
-    MPI_CHECK(MPI_Reduce(&sumNode, &sumRoot, 1, MPI_FLOAT, MPI_MAX, 0, MPI_COMM_WORLD));
+    float maxRoot;
+    MPI_CHECK(MPI_Reduce(&maxNode, &maxRoot, 1, MPI_FLOAT, MPI_MAX, 0, MPI_COMM_WORLD));
 
     if (commRank == 0)
     {
-        float average = sumRoot;
-        cout << "Maximum Euclidean distance is: " << average << endl;
+        float max_val = maxRoot;
+        cout << "Maximum Euclidean distance is: " << max_val << endl;
     }
 
     // Cleanup

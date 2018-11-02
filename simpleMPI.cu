@@ -83,7 +83,7 @@ void computeGPU(float *hostData_a, float *hostData_b, int blockSize, int gridSiz
     CUDA_CHECK(cudaFree(deviceOutputData));
 }
 
-float sum(float *data, int size)
+float max_here(float *data, int size)
 {
     float max_val = data[0];
 

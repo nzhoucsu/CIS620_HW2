@@ -23,7 +23,7 @@
 extern "C" {
     void initData(float *data, int dataSize);
     void computeGPU(float *hostData_a, float *hostData_b, int blockSize, int gridSize);
-    float sum(float *data, int size);
+    float max_here(float *data, int size);
     void my_abort(int err);
 }
 
